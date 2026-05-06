@@ -1,8 +1,8 @@
 # AMBER
 
-**A**ccess **M**ethod for **B**ibliographic **E**lectronic **R**ecords — a Dynix-style terminal search for the local LibraryThing JSON export.
+**A**ccess **M**ethod for **B**ibliographic **E**lectronic **R**ecords — a Dynix-style terminal search for the local LibraryThing (JSON export) and Calibre databases.
 
-Catalog files live in `./data/`:
+Catalog files live in `./data/`, e.g. in my case:
 
 - `data/librarything_*.json` — LibraryThing JSON export (loaded by default)
 - `data/metadata-dmd.db` as `DANIEL` in the format/library column
