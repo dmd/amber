@@ -26,7 +26,7 @@ from aiohttp import WSMsgType, web
 
 COLS = 80
 ROWS = 25
-DEFAULT_MAX_SESSIONS = 8
+DEFAULT_MAX_SESSIONS = 32
 
 
 class SessionLimiter:
