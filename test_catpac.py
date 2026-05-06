@@ -66,6 +66,22 @@ SAMPLE_CATALOG = {
         "copies": "2",
         "summary": "Machine learning explained with fantasy examples.",
     },
+    "400": {
+        "title": "Moonlight for Lin",
+        "primaryauthor": "Lin, Grace",
+        "authors": [{"lf": "Lin, Grace", "fl": "Grace Lin", "role": "Author"}],
+        "isbn": {"2": "9781111111111"},
+        "publication": "Test House (2023)",
+        "date": "2023",
+        "collections": ["Your library"],
+        "ddc": {"code": ["Fic"], "wording": ["Fiction"]},
+        "lcc": [],
+        "genre": ["Fiction"],
+        "entrydate": "2024-08-14",
+        "format": [{"code": "1.1", "text": "Paper Book"}],
+        "copies": "1",
+        "summary": "A sample book for author-prefix search tests.",
+    },
 }
 
 
@@ -137,7 +153,7 @@ class CatalogTests(unittest.TestCase):
 
             books = catpac.load_catalog(path)
 
-        self.assertEqual(3, len(books))
+        self.assertEqual(4, len(books))
         self.assertEqual("100", books[0].book_id)
         self.assertEqual("Dragons at Crumbling Castle", books[0].title)
 
@@ -159,9 +175,13 @@ class CatalogTests(unittest.TestCase):
     def test_author_search_uses_primary_and_full_author_names(self):
         by_last = catpac.search_books(self.books, "author", "Pratchett")
         by_full = catpac.search_books(self.books, "author", "Terry Pratchett")
+        by_initial = catpac.search_books(self.books, "author", "lin, g")
+        by_full_name = catpac.search_books(self.books, "author", "lin, grace")
 
         self.assertEqual("100", by_last[0].book.book_id)
         self.assertEqual("100", by_full[0].book.book_id)
+        self.assertEqual("400", by_initial[0].book.book_id)
+        self.assertEqual("400", by_full_name[0].book.book_id)
 
     def test_isbn_search_ignores_punctuation(self):
         results = catpac.search_books(self.books, "isbn", "978-0544-466593")
@@ -180,7 +200,7 @@ class CatalogTests(unittest.TestCase):
     def test_recent_additions_sort_by_entrydate_descending(self):
         results = catpac.search_books(self.books, "recent")
 
-        self.assertEqual(["200", "300", "100"], [result.book.book_id for result in results])
+        self.assertEqual(["200", "400", "300", "100"], [result.book.book_id for result in results])
 
     def test_empty_and_no_result_searches(self):
         self.assertEqual([], catpac.search_books(self.books, "title", ""))

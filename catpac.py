@@ -500,7 +500,7 @@ def field_match_score(text: str, terms: list[str], phrase: str) -> int:
 def token_matches(term: str, token: str) -> bool:
     if term == token:
         return True
-    if term.isdigit() or len(term) <= 2:
+    if term.isdigit():
         return False
     return token.startswith(term)
 
