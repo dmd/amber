@@ -975,7 +975,7 @@ class DynixApp:
         while True:
             self.draw_header("ITEM DETAIL")
             height, _ = self.stdscr.getmaxyx()
-            visible_rows = max(1, height - 8)
+            visible_rows = max(1, height - 9)
             offset = max(0, min(offset, max(0, len(lines) - visible_rows)))
             self.add(5, 1, clip(book.title.upper(), 76), self.attr(COLOR_NORMAL, curses.A_BOLD))
             y = 7
