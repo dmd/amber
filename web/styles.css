@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=VT323&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=VT323&display=swap");
 
 :root {
   --paper: #ff8d00;
@@ -21,7 +21,7 @@ body {
     radial-gradient(circle at 50% 42%, rgba(255, 141, 0, 0.11), transparent 48%),
     radial-gradient(circle at 50% 50%, #241205 0%, #100800 82%);
   color: var(--paper);
-  font: 1.4rem VT323, "IBM Plex Mono", monospace;
+  font: 1.4rem VT323, monospace;
   text-shadow: 0 0 2px #a8a8a8;
 }
 
