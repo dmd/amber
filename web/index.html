@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CatPAC</title>
+    <link rel="stylesheet" href="/xterm/css/xterm.css">
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <main class="crt-shell" aria-label="CatPAC terminal">
+      <section class="terminal-bezel">
+        <div class="terminal-toolbar" aria-hidden="true">
+          <span>CATPAC</span>
+          <span>80x25</span>
+          <span id="link-state">CONNECTING</span>
+        </div>
+        <div class="screen">
+          <div id="terminal"></div>
+          <div class="scanline"></div>
+        </div>
+      </section>
+    </main>
+    <script src="/xterm/lib/xterm.js"></script>
+    <script src="/xterm-canvas/lib/addon-canvas.js"></script>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

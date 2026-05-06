@@ -1,0 +1,8 @@
+services:
+  catpac-web:
+    build: .
+    image: catpac-web:latest
+    container_name: catpac-web
+    ports:
+      - "2380:2380"
+    restart: unless-stopped
