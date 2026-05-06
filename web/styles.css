@@ -221,3 +221,33 @@ body::before {
     overflow: auto;
   }
 }
+
+.mobile-block {
+  display: none;
+}
+
+@media (pointer: coarse) and (hover: none), (max-width: 720px) {
+  .crt-shell {
+    display: none;
+  }
+
+  .mobile-block {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    box-sizing: border-box;
+    text-align: center;
+    color: var(--paper-hot);
+    font: 1.6rem VT323, monospace;
+    line-height: 1.4;
+    text-shadow: 0 0 4px rgba(255, 141, 0, 0.5);
+  }
+
+  .mobile-block p {
+    max-width: 22ch;
+    margin: 0;
+  }
+}
