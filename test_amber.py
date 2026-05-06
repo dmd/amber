@@ -9,8 +9,8 @@ import sqlite3
 import tempfile
 import unittest
 
-import catpac
-import catpac_telnet
+import amber
+import amber_telnet
 
 
 SAMPLE_CATALOG = {
@@ -141,7 +141,7 @@ def create_sample_calibre_db(path):
 class CatalogTests(unittest.TestCase):
     def setUp(self):
         self.books = [
-            catpac.normalize_record(book_id, record)
+            amber.normalize_record(book_id, record)
             for book_id, record in SAMPLE_CATALOG.items()
         ]
 
@@ -151,7 +151,7 @@ class CatalogTests(unittest.TestCase):
             with open(path, "w", encoding="utf-8") as handle:
                 json.dump(SAMPLE_CATALOG, handle)
 
-            books = catpac.load_catalog(path)
+            books = amber.load_catalog(path)
 
         self.assertEqual(4, len(books))
         self.assertEqual("100", books[0].book_id)
@@ -168,15 +168,15 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(("PZ7.P8865Dr 2015",), book.lcc_codes)
 
     def test_title_search_matches_and_ranks_title_first(self):
-        results = catpac.search_books(self.books, "title", "dragons")
+        results = amber.search_books(self.books, "title", "dragons")
 
         self.assertEqual(["100", "300"], [result.book.book_id for result in results])
 
     def test_author_search_uses_primary_and_full_author_names(self):
-        by_last = catpac.search_books(self.books, "author", "Pratchett")
-        by_full = catpac.search_books(self.books, "author", "Terry Pratchett")
-        by_initial = catpac.search_books(self.books, "author", "lin, g")
-        by_full_name = catpac.search_books(self.books, "author", "lin, grace")
+        by_last = amber.search_books(self.books, "author", "Pratchett")
+        by_full = amber.search_books(self.books, "author", "Terry Pratchett")
+        by_initial = amber.search_books(self.books, "author", "lin, g")
+        by_full_name = amber.search_books(self.books, "author", "lin, grace")
 
         self.assertEqual("100", by_last[0].book.book_id)
         self.assertEqual("100", by_full[0].book.book_id)
@@ -184,27 +184,27 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual("400", by_full_name[0].book.book_id)
 
     def test_isbn_search_ignores_punctuation(self):
-        results = catpac.search_books(self.books, "isbn", "978-0544-466593")
+        results = amber.search_books(self.books, "isbn", "978-0544-466593")
 
         self.assertEqual(["100"], [result.book.book_id for result in results])
 
     def test_series_subject_and_keyword_searches(self):
-        series = catpac.search_books(self.books, "series", "applied myths")
-        subject = catpac.search_books(self.books, "subject", "006.3")
-        keyword = catpac.search_books(self.books, "keyword", "modern AI")
+        series = amber.search_books(self.books, "series", "applied myths")
+        subject = amber.search_books(self.books, "subject", "006.3")
+        keyword = amber.search_books(self.books, "keyword", "modern AI")
 
         self.assertEqual(["300"], [result.book.book_id for result in series])
         self.assertEqual(["200"], [result.book.book_id for result in subject])
         self.assertEqual(["200"], [result.book.book_id for result in keyword])
 
     def test_recent_additions_sort_by_entrydate_descending(self):
-        results = catpac.search_books(self.books, "recent")
+        results = amber.search_books(self.books, "recent")
 
         self.assertEqual(["200", "400", "300", "100"], [result.book.book_id for result in results])
 
     def test_empty_and_no_result_searches(self):
-        self.assertEqual([], catpac.search_books(self.books, "title", ""))
-        self.assertEqual([], catpac.search_books(self.books, "keyword", "not-present"))
+        self.assertEqual([], amber.search_books(self.books, "title", ""))
+        self.assertEqual([], amber.search_books(self.books, "keyword", "not-present"))
 
 
 class CalibreCatalogTests(unittest.TestCase):
@@ -213,7 +213,7 @@ class CalibreCatalogTests(unittest.TestCase):
             path = os.path.join(tmpdir, "metadata-dmd.db")
             create_sample_calibre_db(path)
 
-            books = catpac.load_calibre_catalog(path, "DANIEL")
+            books = amber.load_calibre_catalog(path, "DANIEL")
 
         self.assertEqual(1, len(books))
         book = books[0]
@@ -226,14 +226,14 @@ class CalibreCatalogTests(unittest.TestCase):
         self.assertEqual("2026-02-03", book.entrydate)
         self.assertEqual("EBOOK: DANIEL", book.ebook_marker)
         self.assertIn("EBOOK: DANIEL", book.collections)
-        self.assertEqual("DANIEL EPUB/PDF", catpac.format_display(book))
+        self.assertEqual("DANIEL EPUB/PDF", amber.format_display(book))
         self.assertEqual(("Lunar Files",), book.series)
         self.assertEqual(("Science Fiction",), book.genre)
         self.assertEqual("A bold ebook summary.", book.summary)
 
-        self.assertEqual(["calibre-daniel:1"], [r.book.book_id for r in catpac.search_books(books, "title", "moon")])
-        self.assertEqual(["calibre-daniel:1"], [r.book.book_id for r in catpac.search_books(books, "isbn", "978-1234567890")])
-        self.assertEqual(["calibre-daniel:1"], [r.book.book_id for r in catpac.search_books(books, "keyword", "daniel")])
+        self.assertEqual(["calibre-daniel:1"], [r.book.book_id for r in amber.search_books(books, "title", "moon")])
+        self.assertEqual(["calibre-daniel:1"], [r.book.book_id for r in amber.search_books(books, "isbn", "978-1234567890")])
+        self.assertEqual(["calibre-daniel:1"], [r.book.book_id for r in amber.search_books(books, "keyword", "daniel")])
 
     def test_load_combined_catalog_adds_librarything_and_calibre(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -243,7 +243,7 @@ class CalibreCatalogTests(unittest.TestCase):
                 json.dump({"100": SAMPLE_CATALOG["100"]}, handle)
             create_sample_calibre_db(db_path)
 
-            books = catpac.load_combined_catalog(json_path, [("CELESTE", db_path)])
+            books = amber.load_combined_catalog(json_path, [("CELESTE", db_path)])
 
         self.assertEqual(2, len(books))
         self.assertEqual(["100", "calibre-celeste:1"], [book.book_id for book in books])
@@ -252,37 +252,37 @@ class CalibreCatalogTests(unittest.TestCase):
 
 class TelnetTests(unittest.TestCase):
     def test_telnet_parser_strips_negotiation_bytes(self):
-        parser = catpac_telnet.TelnetInput()
+        parser = amber_telnet.TelnetInput()
         data = bytes(
             [
                 ord("q"),
-                catpac_telnet.IAC,
-                catpac_telnet.DO,
-                catpac_telnet.OPT_ECHO,
+                amber_telnet.IAC,
+                amber_telnet.DO,
+                amber_telnet.OPT_ECHO,
                 ord("\r"),
             ]
         )
 
         self.assertEqual(b"q\r", parser.feed(data))
         self.assertEqual(
-            bytes([catpac_telnet.IAC, catpac_telnet.WILL, catpac_telnet.OPT_ECHO]),
+            bytes([amber_telnet.IAC, amber_telnet.WILL, amber_telnet.OPT_ECHO]),
             parser.drain_responses(),
         )
 
     def test_telnet_parser_handles_naws_suboption(self):
         sizes = []
-        parser = catpac_telnet.TelnetInput(on_naws=lambda cols, rows: sizes.append((cols, rows)))
+        parser = amber_telnet.TelnetInput(on_naws=lambda cols, rows: sizes.append((cols, rows)))
         data = bytes(
             [
-                catpac_telnet.IAC,
-                catpac_telnet.SB,
-                catpac_telnet.OPT_NAWS,
+                amber_telnet.IAC,
+                amber_telnet.SB,
+                amber_telnet.OPT_NAWS,
                 0,
                 100,
                 0,
                 40,
-                catpac_telnet.IAC,
-                catpac_telnet.SE,
+                amber_telnet.IAC,
+                amber_telnet.SE,
             ]
         )
 

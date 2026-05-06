@@ -1,8 +1,8 @@
 services:
-  catpac-web:
+  amber-web:
     build: .
-    image: catpac-web:latest
-    container_name: catpac-web
+    image: amber-web:latest
+    container_name: amber-web
     ports:
       - "2380:2380"
     restart: unless-stopped

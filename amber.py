@@ -1109,7 +1109,7 @@ def main(argv: list[str] | None = None) -> int:
         ebook_databases.extend(args.ebook_db or [])
         books = load_combined_catalog(catalog_path, ebook_databases)
     except (OSError, ValueError, sqlite3.Error, json.JSONDecodeError) as exc:
-        print(f"catpac: {exc}", file=sys.stderr)
+        print(f"amber: {exc}", file=sys.stderr)
         return 2
 
     if args.check:

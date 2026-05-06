@@ -2,7 +2,7 @@
 # /// script
 # dependencies = []
 # ///
-"""Serve catpac.py over a small telnet-compatible PTY bridge."""
+"""Serve amber.py over a small telnet-compatible PTY bridge."""
 
 from __future__ import annotations
 
@@ -172,7 +172,7 @@ def set_window_size(fd: int, size: WindowSize) -> None:
         pass
 
 
-def spawn_catpac(args: argparse.Namespace, size: WindowSize) -> tuple[int, int]:
+def spawn_amber(args: argparse.Namespace, size: WindowSize) -> tuple[int, int]:
     pid, master_fd = pty.fork()
     if pid == 0:
         env = os.environ.copy()
@@ -180,7 +180,7 @@ def spawn_catpac(args: argparse.Namespace, size: WindowSize) -> tuple[int, int]:
         env["LINES"] = str(size.rows)
         env["COLUMNS"] = str(size.cols)
         os.chdir(args.directory)
-        command = [os.path.join(args.directory, "catpac.py"), "--theme", args.theme]
+        command = [os.path.join(args.directory, "amber.py"), "--theme", args.theme]
         if args.catalog:
             command.extend(["--catalog", args.catalog])
         os.execvpe(command[0], command, env)
@@ -231,7 +231,7 @@ def bridge_client(conn: socket.socket, addr: tuple[str, int], args: argparse.Nam
 
     try:
         conn.sendall(telnet_preamble())
-        pid, master_fd = spawn_catpac(args, size)
+        pid, master_fd = spawn_amber(args, size)
         while True:
             readable, _, _ = select.select([conn, master_fd], [], [])
             if conn in readable:
@@ -268,7 +268,7 @@ def serve(args: argparse.Namespace) -> int:
         server.bind((args.host, args.port))
         server.listen(args.backlog)
         print(
-            f"CatPAC telnet listening on {args.host}:{args.port} "
+            f"AMBER telnet listening on {args.host}:{args.port} "
             f"(catalog directory: {args.directory})",
             flush=True,
         )
@@ -281,10 +281,10 @@ def serve(args: argparse.Namespace) -> int:
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Serve CatPAC over telnet")
+    parser = argparse.ArgumentParser(description="Serve AMBER over telnet")
     parser.add_argument("--host", default="127.0.0.1", help="Bind host, defaults to localhost")
     parser.add_argument("--port", type=int, default=2323, help="Bind port, defaults to 2323")
-    parser.add_argument("--catalog", help="Optional catalog path passed to catpac.py")
+    parser.add_argument("--catalog", help="Optional catalog path passed to amber.py")
     parser.add_argument("--theme", choices=("amber", "green"), default="amber")
     parser.add_argument("--term", default="xterm-256color", help="TERM value for spawned sessions")
     parser.add_argument("--cols", type=int, default=80, help="Default terminal columns before NAWS")
@@ -294,7 +294,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument(
         "--directory",
         default=os.path.dirname(os.path.abspath(__file__)),
-        help="Directory containing catpac.py and the catalog JSON",
+        help="Directory containing amber.py and the catalog JSON",
     )
     return parser.parse_args(argv)
 
@@ -304,10 +304,10 @@ def main(argv: list[str] | None = None) -> int:
     try:
         return serve(args)
     except KeyboardInterrupt:
-        print("\nCatPAC telnet stopped.", flush=True)
+        print("\nAMBER telnet stopped.", flush=True)
         return 130
     except OSError as exc:
-        print(f"catpac_telnet: {exc}", file=sys.stderr)
+        print(f"amber_telnet: {exc}", file=sys.stderr)
         return 2
 
 

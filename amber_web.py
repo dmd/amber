@@ -4,7 +4,7 @@
 #   "aiohttp",
 # ]
 # ///
-"""Serve CatPAC as an 80x25 browser terminal."""
+"""Serve AMBER as an 80x25 browser terminal."""
 
 from __future__ import annotations
 
@@ -51,7 +51,7 @@ def set_window_size(fd: int, rows: int = ROWS, cols: int = COLS) -> None:
         pass
 
 
-def spawn_catpac(config: ServerConfig) -> tuple[int, int]:
+def spawn_amber(config: ServerConfig) -> tuple[int, int]:
     pid, master_fd = pty.fork()
     if pid == 0:
         env = os.environ.copy()
@@ -59,7 +59,7 @@ def spawn_catpac(config: ServerConfig) -> tuple[int, int]:
         env["LINES"] = str(ROWS)
         env["COLUMNS"] = str(COLS)
         os.chdir(config.directory)
-        command = [str(config.directory / "catpac.py"), "--theme", config.theme]
+        command = [str(config.directory / "amber.py"), "--theme", config.theme]
         if config.catalog:
             command.extend(["--catalog", config.catalog])
         if config.no_ebooks:
@@ -86,7 +86,7 @@ async def terminal_ws(request: web.Request) -> web.WebSocketResponse:
     ws = web.WebSocketResponse(max_msg_size=1024 * 1024)
     await ws.prepare(request)
 
-    pid, master_fd = spawn_catpac(config)
+    pid, master_fd = spawn_amber(config)
     loop = asyncio.get_running_loop()
     output: asyncio.Queue[bytes | None] = asyncio.Queue()
     closed = False
@@ -175,12 +175,12 @@ def create_app(config: ServerConfig) -> web.Application:
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Serve CatPAC as a browser terminal")
+    parser = argparse.ArgumentParser(description="Serve AMBER as a browser terminal")
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", type=int, default=2380)
     parser.add_argument("--directory", default=str(Path(__file__).resolve().parent))
     parser.add_argument("--theme", choices=("amber", "green"), default="amber")
-    parser.add_argument("--catalog", help="Optional LibraryThing catalog path passed to catpac.py")
+    parser.add_argument("--catalog", help="Optional LibraryThing catalog path passed to amber.py")
     parser.add_argument("--no-ebooks", action="store_true", help="Do not load Calibre ebook databases")
     parser.add_argument("--term", default="xterm-256color")
     return parser.parse_args(argv)

@@ -17,16 +17,16 @@ ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 
 COPY --from=frontend /app/node_modules ./node_modules
-COPY catpac.py catpac_web.py ./
+COPY amber.py amber_web.py ./
 COPY librarything_ddrucker_202605061407.json metadata-dmd.db metadata-cad.db ./
 COPY web ./web
 
-RUN chmod +x /app/catpac.py /app/catpac_web.py
-RUN uv run --script ./catpac_web.py --help >/dev/null
+RUN chmod +x /app/amber.py /app/amber_web.py
+RUN uv run --script ./amber_web.py --help >/dev/null
 
 EXPOSE 2380
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:2380/healthz', timeout=3).read()"
 
-CMD ["uv", "run", "--script", "./catpac_web.py", "--host", "0.0.0.0", "--port", "2380"]
+CMD ["uv", "run", "--script", "./amber_web.py", "--host", "0.0.0.0", "--port", "2380"]

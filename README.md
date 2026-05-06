@@ -1,8 +1,8 @@
-# CatPAC
+# AMBER
 
-Dynix-style terminal search for the local LibraryThing JSON export.
+**A**ccess **M**ethod for **B**ibliographic **E**lectronic **R**ecords — a Dynix-style terminal search for the local LibraryThing JSON export.
 
-By default, CatPAC also loads the local Calibre databases:
+By default, AMBER also loads the local Calibre databases:
 
 - `metadata-dmd.db` as `DANIEL` in the format/library column
 - `metadata-cad.db` as `CELESTE` in the format/library column
@@ -12,10 +12,10 @@ Use `--no-ebooks` to search only the LibraryThing export, or `--ebook-db NAME=PA
 ## Local TUI
 
 ```sh
-./catpac.py
-./catpac.py --theme green
-./catpac.py --check
-./catpac.py --no-ebooks
+./amber.py
+./amber.py --theme green
+./amber.py --check
+./amber.py --no-ebooks
 ```
 
 ## Telnet Server
@@ -23,7 +23,7 @@ Use `--no-ebooks` to search only the LibraryThing export, or `--ebook-db NAME=PA
 Start the local telnet bridge:
 
 ```sh
-./catpac_telnet.py --host 127.0.0.1 --port 2323
+./amber_telnet.py --host 127.0.0.1 --port 2323
 ```
 
 Connect locally from another terminal:
@@ -53,8 +53,8 @@ The telnet server binds to localhost by default. Use `--host 0.0.0.0` only when 
 Build and run the Docker image:
 
 ```sh
-docker build -t catpac-web .
-docker run --rm -p 2380:2380 catpac-web
+docker build -t amber-web .
+docker run --rm -p 2380:2380 amber-web
 ```
 
 Open:
@@ -63,4 +63,4 @@ Open:
 http://localhost:2380/
 ```
 
-The browser UI is an 80x25 xterm.js terminal connected to the same CatPAC curses app over a WebSocket PTY bridge.
+The browser UI is an 80x25 xterm.js terminal connected to the same AMBER curses app over a WebSocket PTY bridge.
