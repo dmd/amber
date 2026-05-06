@@ -202,7 +202,7 @@ def normalize_record(book_id: str, record: dict[str, Any]) -> Book:
         ]
     )
     ddc = record.get("ddc") if isinstance(record.get("ddc"), dict) else {}
-    lcc = record.get("lcc") if isinstance(record.get("lcc"), dict) else record.get("lcc")
+    lcc = record.get("lcc")
     ddc_codes = unique(strings_from(ddc.get("code") if isinstance(ddc, dict) else None))
     ddc_words = unique(strings_from(ddc.get("wording") if isinstance(ddc, dict) else None))
     lcc_codes = unique(strings_from(lcc.get("code") if isinstance(lcc, dict) else lcc))
@@ -444,20 +444,25 @@ def load_calibre_catalog(path: str, library_name: str) -> list[Book]:
         conn.close()
 
 
-def find_default_catalog(cwd: str = ".") -> str:
-    candidates = sorted(glob.glob(os.path.join(cwd, "librarything_*.json")))
+DEFAULT_DATA_DIR = "data"
+
+
+def find_default_catalog(directory: str = DEFAULT_DATA_DIR) -> str:
+    candidates = sorted(glob.glob(os.path.join(directory, "librarything_*.json")))
     if len(candidates) == 1:
         return candidates[0]
     if not candidates:
-        raise FileNotFoundError("No librarything_*.json catalog file found.")
+        raise FileNotFoundError(
+            f"No librarything_*.json catalog file found in {directory!r}."
+        )
     names = ", ".join(os.path.basename(path) for path in candidates)
     raise FileExistsError(f"Multiple catalog files found; use --catalog. Found: {names}")
 
 
-def default_ebook_databases(cwd: str = ".") -> list[tuple[str, str]]:
+def default_ebook_databases(directory: str = DEFAULT_DATA_DIR) -> list[tuple[str, str]]:
     found: list[tuple[str, str]] = []
     for library_name, filename in DEFAULT_EBOOK_DATABASES:
-        path = os.path.join(cwd, filename)
+        path = os.path.join(directory, filename)
         if os.path.exists(path):
             found.append((library_name, path))
     return found

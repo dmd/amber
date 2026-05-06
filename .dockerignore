@@ -5,3 +5,10 @@ node_modules/
 *.pyc
 *.pyo
 *.log
+
+# Local catalog data — mounted at runtime as /app/data, never baked into the image
+data/
+librarything_*.json
+metadata-*.db
+*.sqlite
+*.sqlite3

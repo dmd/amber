@@ -26,6 +26,25 @@ from aiohttp import WSMsgType, web
 
 COLS = 80
 ROWS = 25
+DEFAULT_MAX_SESSIONS = 8
+
+
+class SessionLimiter:
+    """Cap concurrent PTY-backed sessions. Single-threaded asyncio, no lock needed."""
+
+    def __init__(self, limit: int) -> None:
+        self.limit = limit
+        self.active = 0
+
+    def try_acquire(self) -> bool:
+        if self.active >= self.limit:
+            return False
+        self.active += 1
+        return True
+
+    def release(self) -> None:
+        if self.active > 0:
+            self.active -= 1
 
 
 @dataclass(frozen=True)
@@ -37,6 +56,7 @@ class ServerConfig:
     catalog: str | None
     no_ebooks: bool
     term: str
+    max_sessions: int
 
 
 def set_window_size(fd: int, rows: int = ROWS, cols: int = COLS) -> None:
@@ -81,10 +101,21 @@ def close_child(pid: int, master_fd: int) -> None:
             os.waitpid(pid, 0)
 
 
-async def terminal_ws(request: web.Request) -> web.WebSocketResponse:
+async def terminal_ws(request: web.Request) -> web.StreamResponse:
     config: ServerConfig = request.app["config"]
+    limiter: SessionLimiter = request.app["limiter"]
+    if not limiter.try_acquire():
+        return web.Response(
+            status=503,
+            text="amber: too many active sessions, try again shortly\n",
+            content_type="text/plain",
+        )
     ws = web.WebSocketResponse(max_msg_size=1024 * 1024)
-    await ws.prepare(request)
+    try:
+        await ws.prepare(request)
+    except Exception:
+        limiter.release()
+        raise
 
     pid, master_fd = spawn_amber(config)
     loop = asyncio.get_running_loop()
@@ -142,6 +173,7 @@ async def terminal_ws(request: web.Request) -> web.WebSocketResponse:
         with contextlib.suppress(asyncio.CancelledError):
             await sender_task
         close_child(pid, master_fd)
+        limiter.release()
 
     return ws
 
@@ -163,6 +195,7 @@ def create_app(config: ServerConfig) -> web.Application:
     canvas_dir = root / "node_modules" / "@xterm" / "addon-canvas"
     app["config"] = config
     app["static_dir"] = static_dir
+    app["limiter"] = SessionLimiter(config.max_sessions)
     app.router.add_get("/", index)
     app.router.add_get("/healthz", healthz)
     app.router.add_get("/ws", terminal_ws)
@@ -183,6 +216,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--catalog", help="Optional LibraryThing catalog path passed to amber.py")
     parser.add_argument("--no-ebooks", action="store_true", help="Do not load Calibre ebook databases")
     parser.add_argument("--term", default="xterm-256color")
+    parser.add_argument(
+        "--max-sessions",
+        type=int,
+        default=DEFAULT_MAX_SESSIONS,
+        help="Maximum concurrent terminal sessions; extra upgrades get HTTP 503",
+    )
     return parser.parse_args(argv)
 
 
@@ -196,6 +235,7 @@ def main(argv: list[str] | None = None) -> int:
         catalog=args.catalog,
         no_ebooks=args.no_ebooks,
         term=args.term,
+        max_sessions=args.max_sessions,
     )
     app = create_app(config)
     web.run_app(app, host=config.host, port=config.port, print=None)

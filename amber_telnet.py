@@ -40,6 +40,8 @@ TTYPE_SEND = 1
 SUPPORTED_DO = {OPT_ECHO, OPT_SUPPRESS_GO_AHEAD}
 SUPPORTED_WILL = {OPT_SUPPRESS_GO_AHEAD, OPT_TERMINAL_TYPE, OPT_NAWS}
 
+DEFAULT_MAX_SESSIONS = 8
+
 
 @dataclass
 class WindowSize:
@@ -263,20 +265,40 @@ def bridge_client(conn: socket.socket, addr: tuple[str, int], args: argparse.Nam
 
 
 def serve(args: argparse.Namespace) -> int:
+    semaphore = threading.BoundedSemaphore(args.max_sessions)
+
+    def session(conn: socket.socket, addr: tuple[str, int]) -> None:
+        try:
+            bridge_client(conn, addr, args)
+        finally:
+            semaphore.release()
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server.bind((args.host, args.port))
         server.listen(args.backlog)
         print(
             f"AMBER telnet listening on {args.host}:{args.port} "
-            f"(catalog directory: {args.directory})",
+            f"(catalog directory: {args.directory}, max sessions: {args.max_sessions})",
             flush=True,
         )
         while True:
             conn, addr = server.accept()
+            if not semaphore.acquire(blocking=False):
+                if args.verbose:
+                    print(f"Rejected (busy) {addr[0]}:{addr[1]}", flush=True)
+                try:
+                    conn.sendall(b"\r\nAMBER busy. Try again shortly.\r\n")
+                except OSError:
+                    pass
+                try:
+                    conn.close()
+                except OSError:
+                    pass
+                continue
             if args.verbose:
                 print(f"Connected {addr[0]}:{addr[1]}", flush=True)
-            thread = threading.Thread(target=bridge_client, args=(conn, addr, args), daemon=True)
+            thread = threading.Thread(target=session, args=(conn, addr), daemon=True)
             thread.start()
 
 
@@ -290,6 +312,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--cols", type=int, default=80, help="Default terminal columns before NAWS")
     parser.add_argument("--rows", type=int, default=24, help="Default terminal rows before NAWS")
     parser.add_argument("--backlog", type=int, default=5)
+    parser.add_argument(
+        "--max-sessions",
+        type=int,
+        default=DEFAULT_MAX_SESSIONS,
+        help="Maximum concurrent telnet sessions; extra connections are dropped",
+    )
     parser.add_argument("--verbose", action="store_true")
     parser.add_argument(
         "--directory",

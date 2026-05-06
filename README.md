@@ -2,12 +2,13 @@
 
 **A**ccess **M**ethod for **B**ibliographic **E**lectronic **R**ecords — a Dynix-style terminal search for the local LibraryThing JSON export.
 
-By default, AMBER also loads the local Calibre databases:
+Catalog files live in `./data/`:
 
-- `metadata-dmd.db` as `DANIEL` in the format/library column
-- `metadata-cad.db` as `CELESTE` in the format/library column
+- `data/librarything_*.json` — LibraryThing JSON export (loaded by default)
+- `data/metadata-dmd.db` as `DANIEL` in the format/library column
+- `data/metadata-cad.db` as `CELESTE` in the format/library column
 
-Use `--no-ebooks` to search only the LibraryThing export, or `--ebook-db NAME=PATH` to add another Calibre metadata database.
+Use `--no-ebooks` to search only the LibraryThing export, or `--ebook-db NAME=PATH` to add another Calibre metadata database. Override the catalog path with `--catalog PATH`.
 
 ## Local TUI
 
@@ -50,11 +51,17 @@ The telnet server binds to localhost by default. Use `--host 0.0.0.0` only when 
 
 ## Web Terminal
 
-Build and run the Docker image:
+Build and run the Docker image. The catalog is **not** baked into the image — mount `./data` as a read-only volume at `/app/data`:
 
 ```sh
 docker build -t amber-web .
-docker run --rm -p 2380:2380 amber-web
+docker run --rm -p 2380:2380 -v "$PWD/data:/app/data:ro" amber-web
+```
+
+Or via compose (the volume mount is already wired up):
+
+```sh
+docker compose up --build
 ```
 
 Open:

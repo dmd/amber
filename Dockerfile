@@ -18,11 +18,13 @@ ENV LC_ALL=C.UTF-8
 
 COPY --from=frontend /app/node_modules ./node_modules
 COPY amber.py amber_web.py ./
-COPY librarything_ddrucker_202605061407.json metadata-dmd.db metadata-cad.db ./
 COPY web ./web
 
 RUN chmod +x /app/amber.py /app/amber_web.py
+RUN mkdir -p /app/data
 RUN uv run --script ./amber_web.py --help >/dev/null
+
+VOLUME ["/app/data"]
 
 EXPOSE 2380
 
