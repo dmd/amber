@@ -633,7 +633,7 @@ class DynixApp:
         curses.init_pair(COLOR_NORMAL, phosphor, background)
         curses.init_pair(COLOR_REVERSE, curses.COLOR_BLACK, phosphor)
         curses.init_pair(COLOR_DIM, phosphor, background)
-        curses.init_pair(COLOR_ALERT, curses.COLOR_RED, background)
+        curses.init_pair(COLOR_ALERT, phosphor, background)
         self.stdscr.bkgd(" ", curses.color_pair(COLOR_NORMAL))
 
     def run(self) -> None:
