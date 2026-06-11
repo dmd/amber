@@ -1,4 +1,4 @@
-#!/usr/bin/env -S UV_CACHE_DIR=/private/tmp/codex-uv-cache uv run --script
+#!/usr/bin/env -S UV_CACHE_DIR=/private/tmp/amber-uv-cache uv run --script
 # /// script
 # dependencies = []
 # ///

@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir uv
 WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1
-ENV UV_CACHE_DIR=/tmp/codex-uv-cache
+ENV UV_CACHE_DIR=/tmp/amber-uv-cache
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 
