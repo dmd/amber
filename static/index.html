@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AMBER</title>
-    <link rel="stylesheet" href="/xterm/css/xterm.css">
-    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="vendor/xterm.css">
+    <link rel="stylesheet" href="styles.css">
   </head>
   <body>
     <div class="mobile-block" role="alert">
@@ -16,7 +16,7 @@
         <div class="terminal-toolbar" aria-hidden="true">
           <span>AMBER</span>
           <span>80x25</span>
-          <span id="link-state">CONNECTING</span>
+          <span id="link-state">LOADING</span>
         </div>
         <div class="screen">
           <div id="terminal"></div>
@@ -25,8 +25,8 @@
       </section>
       <a class="gh-link" href="https://github.com/dmd/amber" target="_blank" rel="noopener noreferrer">AMBER source on GitHub</a>
     </main>
-    <script src="/xterm/lib/xterm.js"></script>
-    <script src="/xterm-canvas/lib/addon-canvas.js"></script>
-    <script src="/static/app.js"></script>
+    <script src="vendor/xterm.js"></script>
+    <script src="vendor/addon-canvas.js"></script>
+    <script src="app.js"></script>
   </body>
 </html>
