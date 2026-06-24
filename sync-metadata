@@ -1,0 +1,3 @@
+#!/bin/bash
+
+scp ~/Dropbox/books/dmd-library/metadata.db eco.3e.org:amber/data/metadata-dmd.db; scp ~/Dropbox/books/capy-library/metadata.db  eco.3e.org:amber/data/metadata-cad.db
