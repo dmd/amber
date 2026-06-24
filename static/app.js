@@ -537,6 +537,170 @@
   }
 
   // ===================================================================
+  // Easter egg: SNAKE. Triggered by typing "/s" on any command screen.
+  // Plays on the same 80x25 cell grid; arrow keys or HJKL steer.
+  // ===================================================================
+
+  const SNAKE = { boxTop: 4, boxLeft: 9, boxW: 60, boxH: 17 };
+  SNAKE.top = SNAKE.boxTop + 1;   // first playable row
+  SNAKE.left = SNAKE.boxLeft + 1; // first playable col
+  SNAKE.gw = SNAKE.boxW - 2;      // playable width in cells
+  SNAKE.gh = SNAKE.boxH - 2;      // playable height in cells
+
+  const snakeGame = {
+    body: [],
+    dir: { x: 1, y: 0 },
+    nextDir: { x: 1, y: 0 },
+    food: { x: 0, y: 0 },
+    score: 0,
+    high: 0,
+    over: false,
+    timer: null
+  };
+
+  function snakeOccupied(x, y) {
+    for (let i = 0; i < snakeGame.body.length; i++) {
+      if (snakeGame.body[i].x === x && snakeGame.body[i].y === y) return true;
+    }
+    return false;
+  }
+
+  function placeFood() {
+    let x, y;
+    do {
+      x = Math.floor(Math.random() * SNAKE.gw);
+      y = Math.floor(Math.random() * SNAKE.gh);
+    } while (snakeOccupied(x, y));
+    snakeGame.food.x = x;
+    snakeGame.food.y = y;
+  }
+
+  function cellAspect() {
+    // Height-to-width ratio of a terminal cell. Cells are taller than wide,
+    // so this is > 1; falls back to a sensible default before first render.
+    try {
+      const cell = term && term._core && term._core._renderService
+        && term._core._renderService.dimensions
+        && term._core._renderService.dimensions.css
+        && term._core._renderService.dimensions.css.cell;
+      if (cell && cell.width && cell.height) return cell.height / cell.width;
+    } catch (e) { /* fall through to default */ }
+    return 2.0;
+  }
+
+  function snakeDelay() {
+    const base = Math.max(70, 150 - snakeGame.score * 4);
+    // A vertical step covers more pixels than a horizontal one (the cell is
+    // taller than wide), so stretch the gap before vertical moves to keep the
+    // apparent on-screen speed the same in both axes.
+    // The /1.5625 nudges vertical motion ~56% faster than pure aspect-matching
+    // (two compounding 25% speed bumps).
+    return snakeGame.dir.y !== 0 ? Math.round(base * cellAspect() / 1.5625) : base;
+  }
+
+  function scheduleSnakeTick() {
+    if (snakeGame.timer !== null) window.clearTimeout(snakeGame.timer);
+    snakeGame.timer = window.setTimeout(snakeLoop, snakeDelay());
+  }
+
+  function snakeLoop() {
+    snakeGame.timer = null;
+    snakeTick();
+    if (!snakeGame.over) scheduleSnakeTick();
+  }
+
+  function stopSnake() {
+    if (snakeGame.timer !== null) { window.clearTimeout(snakeGame.timer); snakeGame.timer = null; }
+  }
+
+  function startSnake() {
+    stopSnake();
+    const cx = Math.floor(SNAKE.gw / 2);
+    const cy = Math.floor(SNAKE.gh / 2);
+    snakeGame.body = [
+      { x: cx, y: cy }, { x: cx - 1, y: cy }, { x: cx - 2, y: cy }, { x: cx - 3, y: cy }
+    ];
+    snakeGame.dir = { x: 1, y: 0 };
+    snakeGame.nextDir = { x: 1, y: 0 };
+    snakeGame.score = 0;
+    snakeGame.over = false;
+    placeFood();
+    ui.state = "snake";
+    scheduleSnakeTick();
+    render();
+  }
+
+  function snakeEnd() {
+    snakeGame.over = true;
+    if (snakeGame.score > snakeGame.high) snakeGame.high = snakeGame.score;
+    stopSnake();
+    render();
+  }
+
+  function snakeSetDir(dx, dy) {
+    // Ignore reversals onto the current heading.
+    if (dx === -snakeGame.dir.x && dy === -snakeGame.dir.y) return;
+    snakeGame.nextDir = { x: dx, y: dy };
+  }
+
+  function snakeTick() {
+    if (snakeGame.over) return;
+    snakeGame.dir = snakeGame.nextDir;
+    const head = snakeGame.body[0];
+    const nx = head.x + snakeGame.dir.x;
+    const ny = head.y + snakeGame.dir.y;
+    if (nx < 0 || nx >= SNAKE.gw || ny < 0 || ny >= SNAKE.gh) return snakeEnd();
+    const eating = nx === snakeGame.food.x && ny === snakeGame.food.y;
+    // The tail vacates this tick unless we grow, so it isn't a collision.
+    const limit = eating ? snakeGame.body.length : snakeGame.body.length - 1;
+    for (let i = 0; i < limit; i++) {
+      if (snakeGame.body[i].x === nx && snakeGame.body[i].y === ny) return snakeEnd();
+    }
+    snakeGame.body.unshift({ x: nx, y: ny });
+    if (eating) {
+      snakeGame.score += 1;
+      placeFood();
+    } else {
+      snakeGame.body.pop();
+    }
+    render();
+  }
+
+  function drawSnake() {
+    drawHeader(`SNAKE   SCORE ${snakeGame.score}   HIGH ${snakeGame.high}`);
+    box(SNAKE.boxTop, SNAKE.boxLeft, SNAKE.boxH, SNAKE.boxW, "dim");
+    putCell(SNAKE.top + snakeGame.food.y, SNAKE.left + snakeGame.food.x, "◆", "bold");
+    for (let i = 0; i < snakeGame.body.length; i++) {
+      const seg = snakeGame.body[i];
+      putCell(SNAKE.top + seg.y, SNAKE.left + seg.x, i === 0 ? "█" : "▓", "normal");
+    }
+    if (snakeGame.over) {
+      const midY = SNAKE.boxTop + Math.floor(SNAKE.boxH / 2);
+      center(midY - 1, " GAME OVER ", "reverseBold");
+      center(midY + 1, `FINAL SCORE ${snakeGame.score}`, "bold");
+      center(midY + 2, "PRESS R TO PLAY AGAIN", "normal");
+    }
+    drawFooter("MOVE: ARROWS / WASD / HJKL   R=RESTART   B=BACK   Q=LOGOFF");
+  }
+
+  function onSnakeKey(data) {
+    if (data === "\x1b[A" || data === "\x1bOA") return snakeSetDir(0, -1);
+    if (data === "\x1b[B" || data === "\x1bOB") return snakeSetDir(0, 1);
+    if (data === "\x1b[C" || data === "\x1bOC") return snakeSetDir(1, 0);
+    if (data === "\x1b[D" || data === "\x1bOD") return snakeSetDir(-1, 0);
+    const key = data.length > 1 ? data[0] : data;
+    switch (key) {
+      case "h": case "H": case "a": case "A": return snakeSetDir(-1, 0);
+      case "j": case "J": case "s": case "S": return snakeSetDir(0, 1);
+      case "k": case "K": case "w": case "W": return snakeSetDir(0, -1);
+      case "l": case "L": case "d": case "D": return snakeSetDir(1, 0);
+      case "r": case "R": return startSnake();
+      case "q": case "Q": stopSnake(); return goGoodbye();
+      case "b": case "B": case "\x1b": stopSnake(); return goMenu();
+    }
+  }
+
+  // ===================================================================
   // State machine — mirrors DynixApp.run() control flow.
   // ===================================================================
 
@@ -561,6 +725,7 @@
       case "detail": drawDetail(); break;
       case "help": drawHelp(); break;
       case "goodbye": drawGoodbye(); break;
+      case "snake": drawSnake(); break;
     }
     flush();
   }
@@ -664,7 +829,11 @@
     if (ch >= " " && ch !== "\x7f" && ui.query.length < 160) { ui.query += ch; return render(); }
   }
 
+  let pendingSlash = false;
+
   function onData(data) {
+    if (ui.state === "snake") return onSnakeKey(data);
+
     if (ui.state === "form") {
       // ESC alone is a command; ESC-prefixed sequences (arrows) are ignored.
       if (data === "\x1b") return onFormChar("\x1b");
@@ -680,6 +849,13 @@
     if (data === "\x1b") key = "\x1b";
     else if (data.length > 1 && data[0] === "\x1b") return;
     else if (data.length > 1) key = data[0];
+
+    // Hidden "/s" command launches the snake easter egg from any command screen.
+    if (key === "/") { pendingSlash = true; return; }
+    if (pendingSlash) {
+      pendingSlash = false;
+      if (key === "s" || key === "S") return startSnake();
+    }
 
     switch (ui.state) {
       case "menu": return onMenuKey(key);
